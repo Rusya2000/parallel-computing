@@ -1,0 +1,163 @@
+#include <mpi.h>
+#include <iostream>
+#include <stdio.h>
+#include <math.h>
+const  int N = 5;//размерность матрицы
+const int di = 3;//количество диагоналей а матрице
+const double eps = 0.0001;
+int proc_rank;
+int proc_num;
+using namespace::std;
+//функция, реализующая последовательный алгоритм диагонального матрично-векторного произведения
+double* Mov(double* A, double* b)
+{
+    double* x, * y;
+    x = new double[N];
+    y = new double[N];
+    for (int i = 0; i < N; i++)
+    {
+        x[i] = 0;
+        y[i] = 0;
+    }
+    int k = 0, t = 0, l = 0, f = 0;
+
+    for (int v = 0; v < (di / 2 + 1); v++)
+    {
+        k = N - v;
+        for (int j = t; j < k + t; j++)
+        {
+            if (v == 0)
+                x[j] += A[j] * b[j];
+            else
+            {
+                x[l] += A[j] * b[v + f];
+                y[v + f] += A[j] * b[l];
+                l++;
+                f++;
+            }
+        }
+        f = 0;
+        l = 0;
+        t += k;
+    }
+
+    for (int u = 0; u < N; u++)
+        x[u] += y[u];
+    delete[]y;
+
+    return x;
+}
+//скалярное произведение
+double Dot_pr(double* a, double* b)
+{
+    double little_mult = 0, mult = 0, k, n1, n2;
+    if (proc_rank == 0)
+        mult = little_mult;
+
+    k = N / proc_num;
+    n1 = k * proc_rank;
+    n2 = k * (proc_rank + 1);
+
+    if (proc_rank == proc_num - 1)
+        n2 = N;
+    for (int i = n1; i < n2; i++)
+        little_mult = a[i] * b[i] + little_mult;
+    MPI_Reduce(&little_mult, &mult, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (proc_rank == 0)
+        return mult;
+
+}
+
+//сам метод сопряженных градиентов
+double* Msg(double* A, double* b, double eps)
+{
+    double* x, * q, * err, * r, * p, w = 0, w_infinity, wk = 0, alfa = 0, betta = 0, gamma = 0;
+    x = new double[N];
+    q = new double[N];
+    r = new double[N];//невязка
+    p = new double[N];
+    err = new double[N];
+
+    int step = 0;
+    for (int i = 0; i < N; i++)
+    {
+        x[i] = 0;
+        q[i] = 0;
+        r[i] = b[i];
+        p[i] = r[i];
+    }
+
+    w = Dot_pr(r, r);
+    w_infinity = eps * w;
+    while (w >= w_infinity)
+    {
+        q = Mov(A, p);
+        gamma = Dot_pr(q, p);
+        alfa = w / gamma;
+        for (int h = 0; h < N; h++)
+        {
+            x[h] = x[h] + alfa * p[h];
+            r[h] = r[h] - alfa * q[h];
+
+        }
+
+        wk = Dot_pr(r, r);
+        betta = wk / w;
+        for (int g = 0; g < N; g++)
+            p[g] = r[g] + betta * p[g];
+
+        w = wk;
+        wk = 0;
+        gamma = 0;
+        step++;
+    }
+
+    cout << "steps: " << step << endl;
+
+    delete[] p;
+    delete[] q;
+    delete[] err;
+    delete[] r;
+
+    return x;
+}
+
+
+
+int main(int argc, char* argv[])
+{
+    int M = 0; double* A, * b;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &proc_num);
+    MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
+    for (int i = 0; i < (di / 2 + 1); i++)
+        M += N - i;
+    A = new double[M];
+    b = new double[N];
+    if (proc_rank == 0)
+    {
+        cout << "M=" << M << endl;
+        cout << "b" << endl;
+        for (int k = 0; k < N; k++)
+            cin >> b[k];
+        cout << "A" << endl;
+        for (int j = 0; j < M; j++)
+            cin >> A[j];
+    }
+
+    MPI_Bcast(A, M, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(b, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    double* z;
+    z = new double[N];
+    z = Msg(A, b, eps);
+    if (proc_rank == 0)
+        for (int i = 0; i < N; i++)
+            cout << z[i] << endl;
+    delete[]z;
+    delete[] A;
+    delete[] b;
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
+    return 0;
+}

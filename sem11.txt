@@ -1,0 +1,57 @@
+#include<stdlib.h>
+#include<mpi.h>
+#include<iostream>
+#include <algorithm>
+using namespace std;
+
+int main(int argc, char **argv) {
+	int rank, size, ammount;
+	int matrix[36] = {0,3,-1,2,-1,7,-1,0,-1,-1,-1,-1,8,-1,0,1,4,-1,-1,-1,-1,0,-1,1,-1,-1,-1,2,0,5,-1,-1,-1,-1,1,0};
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	ammount = 6 / size;
+	int *arr = new int[ammount * 6];
+	int row, num;
+	int mass[6];
+	MPI_Scatter(matrix, ammount * 6, MPI_INT, arr, ammount * 6, MPI_INT, 0, MPI_COMM_WORLD);
+	/*if (rank == 2) {
+		for (int i = 0; i < ammount * 6; i++) {
+			cout << arr[i] << endl;
+		}
+	}*/
+	for (int k = 0; k < 6; k++) {
+		row = k / ammount;
+		num = k - (row * ammount);
+		if (row == rank) {
+			for (int z = num * 6; z < (num + 1) * 6; z++) {
+				mass[z - (num * 6)] = arr[z];
+				if (rank == 2) {
+					//cout << z << " " << arr[z] <<endl;
+				}
+				
+			}
+		}
+		MPI_Bcast(mass, 6,MPI_INT, row, MPI_COMM_WORLD);
+
+		for (int i = 0; i < ammount; i++) {
+			for (int j = 0; j < 6; j++) {
+				if(arr[i * 6 + k] != -1 && mass[j] != -1)
+				arr[i * 6 + j] = min(arr[i * 6 + j], arr[i * 6 + k] + mass[j]);
+			}
+		}
+	}
+	//for (int i = 0; i < ammount * 6; i++)
+		//cout << rank << " " << arr[i] << endl;
+	MPI_Gather(arr, ammount * 6, MPI_INT, matrix, ammount * 6, MPI_INT, 0, MPI_COMM_WORLD);
+	if (rank == 0) {
+		for (int i = 0; i < 36; i++) {
+			if (i % 6 == 0) {
+				cout << endl;
+			}
+			cout << matrix[i] << " ";
+		}
+	}
+	MPI_Finalize();
+	return 0;
+}

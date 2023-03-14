@@ -1,0 +1,88 @@
+#include <stdio.h>
+#include <string.h>
+#include <mpi.h>
+#include <math.h> // l2-norm //
+#include <time.h>
+int main(int argc, char** argv)
+{
+    int numprocs, myid;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+
+    double a[700][700];
+    double b[700];
+    double x[700] = { 0 };
+    double xa[700] = { 0 };
+    double xnew[700] = { 0 };
+    double y[700] = { 0 };
+    float sigancha;
+    time_t startTime = 0, endTime = 0;
+    int n = 700;
+    int i, j = 0;
+    int k = 0;
+    int o;
+    int hoessu = 300;
+    int minhoessu = 300;
+    double sum = 1;
+    int numsent = 0;
+    int ans;
+    int row;
+    MPI_Status status;
+    int sender;
+    int po;
+    double* buffer;
+    /* synchronization */
+    MPI_Barrier(MPI_COMM_WORLD);
+    for (i = 0; i < n; i++) {
+        b[i] = i * 100;
+        for (j = 0; j < n; j++) {
+            a[i][j] = ((i + j) % 10);
+            if (i == j) { a[i][j] += 10000; }
+        }
+        x[i] = b[i] / a[i][i];
+    }
+    /* run if sum is greater than 0.0002 */
+
+    for (k = 0; k < hoessu && sum>0.0002 || k < minhoessu; k++) {
+
+        numsent = 0;
+        for (o = myid + 1; o < n + 1; o += numprocs) {
+            i = o - 1;
+            xa[i] = b[i] + a[i][i] * x[i];
+            for (j = 0; j < n; j++) {
+                xa[i] -= a[i][j] * x[j];
+            }
+            xnew[i] = xa[i] / a[i][i];
+            /*send xnew[i] to master*/
+            ans = xnew[i];
+            MPI_Allgather(&xnew[i], 1, MPI_DOUBLE, &xnew[i], 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        }
+
+        if (myid == 0) {
+
+            /*calculates sum at master*/
+
+            for (j = 0; j < n; j++) {
+                sum = 0.0;
+                sum += (xnew[j] - x[j]) * (xnew[j] - x[j]);
+                x[j] = xnew[j];
+            }
+            sum = pow(sum, 0.5);
+            MPI_Bcast(&x[0], n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }
+    }
+
+    if (myid == 0) {
+        endTime = clock();
+        sigancha = (float)(endTime - startTime) / (CLOCKS_PER_SEC);
+        printf("finished\n");
+        for (j = 0; j < n; j++) {
+            printf("x[%d]=%fl\n", j + 1, xnew[j]);
+        }
+
+        printf("iteration; %d times itereation are done. \n l2-norm, error is %fl .\n %f seceonds are used. \n", k, sum, sigancha);
+    }
+    MPI_Finalize();
+
+}

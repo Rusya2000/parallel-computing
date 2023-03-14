@@ -1,0 +1,5 @@
+﻿  Source.cpp
+C:\Users\rustem\Desktop\пар_прог\mpi\Project1\Project1\Source.cpp(33,6): warning C4101: column: неиспользованная локальная переменная
+C:\Users\rustem\Desktop\пар_прог\mpi\Project1\Project1\Source.cpp(34,6): warning C4101: row: неиспользованная локальная переменная
+C:\Users\rustem\Desktop\пар_прог\mpi\Project1\Project1\Source.cpp(9,18): warning C4101: irank: неиспользованная локальная переменная
+  Project1.vcxproj -> C:\Users\rustem\Desktop\пар_прог\mpi\Project1\Debug\Project1.exe

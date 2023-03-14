@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <mpi.h>
+#include <omp.h>
+
+int main(int argc, char* argv[])
+{
+	int my_id, omp_rank;
+	int provided, required = MPI_THREAD_FUNNELED;
+
+	MPI_Init_thread(&argc, &argv, required, &provided);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
+
+#pragma omp parallel private(omp_rank)
+	{
+		omp_rank = omp_get_thread_num();
+		printf("I'm thread %d in process %d\n", omp_rank, my_id);
+	}
+
+
+	MPI_Finalize();
+	return 0;
+}
+
+
+	if (my_id == 0) {
+				
+			
+				for (int i = 1; i < my_id; i++) {
+				MPI_Send(&omp_rank, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+				
+			
+			}
+		}
+			//printf("%d sent thread " "%d to proccess %d\n", my_id, omp_rank, my_id);
+		if(my_id != 0){
+		
+				MPI_Recv(&omp_rank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				
+		}
+
+#include <stdio.h>
+#include <mpi.h>
+#include <omp.h>
+#include <iostream>
+using namespace std;
+int main(int argc, char* argv[])
+{
+	int my_id, omp_rank, world_size;
+	int provided, required = MPI_THREAD_MULTIPLE;;
+	int i = 0;
+	int rec;
+	MPI_Status status;
+	MPI_Init_thread(&argc, &argv, required, &provided);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
+	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+#pragma omp parallel private(omp_rank)
+	{
+		omp_rank = omp_get_thread_num();
+	
+		if (my_id==0) {
+			for (int i = 1; i < my_id; i++) {
+				MPI_Send(&omp_rank, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+			}
+		
+		}
+
+		if (my_id != 0) {
+			
+			for (int i = 1; i < my_id; i++) {
+				MPI_Recv(&omp_rank, 1, MPI_INT, 0,0, MPI_COMM_WORLD, &status);
+			}
+			
+		}
+		printf("Process %d got %d\n", my_id, omp_rank);
+	}
+	
+	MPI_Finalize();
+	return 0;
+}

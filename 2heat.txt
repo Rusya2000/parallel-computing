@@ -1,0 +1,47 @@
+# include <stdlib.h>
+# include <stdio.h>
+# include <math.h>
+# include <omp.h>
+#include <mpi.h>
+#include <iostream>
+
+using namespace std;
+
+int main(int argc, char *argv[])
+
+{
+# define M 60
+# define N 60
+
+	double diff;
+	double u[M][N];//arr1
+	double **w;//arr2
+	int i;
+	int iterations;
+	int iterations_print;
+	int j;
+	double mean;
+	double my_diff;
+	double wtime;
+	double epsilon = 0.001;
+	int provided;
+	int required = MPI_THREAD_FUNNELED;
+	int rank, size;
+	int local_nx = 0;
+	MPI_Init_thread(&argc, &argv, required, &provided);
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Status st;
+	cout << "M : " << M << " N: " << N << endl;
+	cout << "Epsilon: " << epsilon << endl;
+	cout << "Proccess sani:" << omp_get_num_procs() << endl;
+	cout << "Potok sani: " << omp_get_max_threads() << endl;
+
+	mean = 0.0;
+	if (rank == size - 1 || rank == 0) local_nx = M / size + 1;
+	else local_nx = M / size + 2;
+
+	w = (double**)malloc(local_nx * sizeof(double*));
+	for (i = 0; i < local_nx; i++)
+		*(w + i)

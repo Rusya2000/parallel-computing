@@ -1,0 +1,5 @@
+﻿  HelloMPI.cpp
+C:\Users\rustem\Desktop\пар_прог\mpi\HelloMPI\HelloMPI\HelloMPI.cpp(10,18): warning C4101: omp_rank: неиспользованная локальная переменная
+C:\Users\rustem\Desktop\пар_прог\mpi\HelloMPI\HelloMPI\HelloMPI.cpp(26,6): warning C4101: coords: неиспользованная локальная переменная
+C:\Users\rustem\Desktop\пар_прог\mpi\HelloMPI\HelloMPI\HelloMPI.cpp(27,6): warning C4101: sosedi: неиспользованная локальная переменная
+  HelloMPI.vcxproj -> C:\Users\rustem\Desktop\пар_прог\mpi\HelloMPI\Debug\HelloMPI.exe

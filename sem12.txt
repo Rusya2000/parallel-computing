@@ -1,0 +1,96 @@
+#include<stdlib.h>
+#include<mpi.h>
+#include<iostream>
+#include <algorithm>
+#include <math.h>
+using namespace std;
+
+#define A 100
+
+int main(int argc, char** argv) {
+	int rank, size, x, y, e, j, i, k, n, p, U[6] = { 1,0,0,0,0,0 }, W[6] = { 1,1,1,1,1,1 }, F[6] = { 0,0,0,0,0,0 };
+	int matrix[36] = { A,3,8,2, A,7,
+					  3,A,A,1,A,A,
+					  8,A,A,1,4,A,
+					  2,A,1,A,2,4,
+					  A,A,4,2,A,5,
+					  7,1,A,4,5,A };
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	int ammount = 6 / size;
+	int* V = new int[ammount];
+	//V[j]= {Vij+1,vij+2,....,vij+k}, ij = K*(j1000), k=[n/p]
+	for (i = 0; i < ammount; i++) {
+		V[i] = ammount * rank + i;
+	}
+
+	int m[3];
+	m[0] = 100;
+	i = 0;
+	int* arr = new int[3 * size];
+
+	while (i < 7) {
+		for (j = 0; j < ammount; j++) {
+			//cout << V[j] + (U[i] - 1) * 6 << " " << rank << endl;
+			if (m[0] > matrix[V[j] + (U[i] - 1) * 6]) {
+				m[0] = matrix[V[j] + (U[i] - 1) * 6];
+				m[1] = U[i];
+				m[2] = V[j];
+			}
+
+
+		}
+		/*for (j = rank*6; j < (rank+1)*6; j++) {
+			if (m[0] >matrix[j]) {
+				m[0] = matrix[j];
+				m[1] = U[i];
+				m[2] = j-rank*6;
+			}
+
+		}*/
+		//cout <<i << " "<< rank <<" "<< m[0]<<" "<<m[1]<<" "<<m[2]<<endl;
+		MPI_Gather(m, 3, MPI_INT, arr, 3, MPI_INT, 0, MPI_COMM_WORLD);
+
+		if (rank == 0) {
+			e = arr[0];
+
+			for (j = 0; j < size; j += 3) {
+				//cout << " " << arr[j] << " " << arr[j + 1] << " " << arr[j + 2] << endl;
+			}
+
+			for (j = 0; j < 3 * size; j += 3) {
+				if (e > arr[j]) {
+					e = arr[j];
+					y = arr[j + 2];
+
+
+				}
+
+			}
+			//cout << e << " " << y << endl;
+			F[i] += e;
+			U[i + 1] = y;
+			W[i] = 0;
+		}
+		MPI_Bcast(U, 6, MPI_INT, 0, MPI_COMM_WORLD);
+		i++;
+		if (rank == 0) {
+			for (j = 0; j < 6; j++) {
+				//cout << i << " " << U[j] << endl;
+			}
+		}
+		//cout << rank << " " << i << endl;
+	}
+
+	if (rank == 0) {
+		for (i = 0; i < 6; i++) {
+			cout << U[i] << endl;
+		}
+	}
+
+
+	MPI_Finalize();
+	return 0;
+}

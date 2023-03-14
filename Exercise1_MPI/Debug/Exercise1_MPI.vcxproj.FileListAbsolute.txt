@@ -1,0 +1,4 @@
+C:\Users\User\Desktop\Exercise1_MPI\Debug\Exercise1_MPI.exe
+C:\Users\User\Desktop\Exercise1_MPI\Debug\Exercise1_MPI.pdb
+C:\Users\User\Desktop\Exercise1_MPIап\Debug\Exercise1_MPI.exe
+C:\Users\User\Desktop\Exercise1_MPIап\Debug\Exercise1_MPI.pdb

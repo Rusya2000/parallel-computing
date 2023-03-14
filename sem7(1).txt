@@ -1,0 +1,68 @@
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <iostream>
+#include <stdio.h>
+#include <mpi.h>
+#include <fstream>
+using namespace std;
+
+
+int N = 64;
+#define WR_RANK 0
+
+
+void zapis(int, int*, int);
+
+
+
+
+int main(int argc, char* argv[]) {
+	int rank, size, i, lsize;
+	int* lvector;
+	int* nvector;
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
+	if (size > 64) {
+		fprintf(stderr, "N(64) dolzhen bit bolshe kol - va processov \n ");
+		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+	}
+
+
+	if (N % size != 0) {
+		fprintf(stderr, "N(64) dolzhen delitsya na kol - vo processov \n");
+		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+	}
+
+
+	lsize = N / size;
+	lvector = (int*)malloc(lsize * sizeof(int));
+
+	nvector = (int*)malloc(N * sizeof(int));
+
+	for (i = 0; i < lsize; i++) {
+		lvector[i] = i + 1 + lsize * rank;
+	}
+
+	MPI_Gather(lvector, lsize, MPI_INT, nvector, lsize, MPI_INT, 0, MPI_COMM_WORLD);
+	if (rank == 0) {
+		zapis(rank, nvector, N);
+	}
+
+	free(lvector);
+
+	MPI_Finalize();
+	return 0;
+}
+
+void zapis(int rank, int* nvector, int N) {
+	ofstream file("cpp.txt");
+	for (int i = 0; i < N; i++) {
+		file << nvector[i] << endl;
+	}
+	file.close();
+}

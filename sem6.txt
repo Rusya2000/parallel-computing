@@ -1,0 +1,77 @@
+#include<omp.h>
+#include<mpi.h>
+#include<iostream>
+using namespace std;
+int main(int argc, char* argv[])
+{
+	int i, rank, size;
+	int n = 1000000;
+	int* mes;
+	int* recv;
+	MPI_Status status;
+
+
+	double t0, t1;
+
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	mes = new int[n];
+	recv = new int[n];
+
+
+	for (i = 0; i < n; i++)
+		mes[i] = rank;
+
+
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	t0 = MPI_Wtime();
+	MPI_Win window;
+	MPI_Win_create(mes, n * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+	MPI_Win_fence(0, window);
+	if (rank < size - 1) {
+		MPI_Put(mes, n, MPI_INT, rank + 1, 0, n, MPI_INT, window);
+		cout << "rank:" << rank << "I send " << n << "array elements" << endl;
+	}
+	/* zdes’ */
+	/* otpravka I poluchenie soobshenii kak opredeleno v zadache */
+	if (rank < size - 1) {
+
+
+		cout << "Sender: " << rank << "Sent elements : " << n << "Tag : " << rank + 1 << "Receiver :" << rank + 1 << endl;
+
+	}
+
+
+	if (rank > 0) {
+		cout << "Receiver: " << rank << " first element " << recv[0] << endl;
+
+	}
+
+
+
+	t1 = MPI_Wtime();
+	t1 = MPI_Wtime();
+	MPI_Barrier(MPI_COMM_WORLD);
+	fflush(stdout);
+
+
+	cout << "Time elapsed in rank " << rank << " " << t1 - t0 << endl;
+
+
+	free(mes);
+	free(recv);
+	MPI_Finalize();
+	return 0;
+}
+
+
+for (i = 0; i < N; i++) {
+            for (j = 0; j < N; j++) {
+                cout<<recv[i][j]<<'\t';
+            }
+            cout << endl;
+        }

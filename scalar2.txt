@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include "mpi.h"
+//s#include "Exercise1_dll.h"
+#include <iostream>
+using namespace std;
+
+// Функция выделения памяти под вектор
+double* malloc_array(int n)
+{
+    double* a = new double[n];
+    return a;
+}
+
+// Функция освобождения памяти 
+int free_array(double* a, int n)
+{
+    delete[] a;
+    return 0;
+}
+double scalmult(int n, double* a, double* b)
+{
+    // Определения числа доступных процессов и размера подзадач
+    int nn = 100;
+    int n1 = nn / 4;
+
+    double* a1 = malloc_array(n1);
+    double* b1 = malloc_array(n1);
+
+    MPI_Scatter(&a[0], n1, MPI_INT, &a1[0], n1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatter(&b[0], n1, MPI_INT, &b1[0], n1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // Вычисление скалярного произведения
+    double sum = 0;
+    for (int i = 0; i < n; i++)
+    {
+        sum += a1[i] * b1[i];
+    }
+    double globalsum = sum;
+    MPI_Reduce(&sum, &globalsum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    globalsum = sqrt(globalsum);
+
+    free_array(a1, nn);
+    free_array(b1, nn);
+
+    return globalsum;
+}
+
+int main(int argc, char** argv)
+{
+    // Иницилизация MPI
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    // Определение размера задачи и подзадач
+    int n = 100;
+    int n1 = n / size;
+    if (rank < n - n1 * size) n1++;
+
+    // Выделение памяти 
+    double* a = malloc_array(n1);
+    double* b = malloc_array(n1);
+
+    // Заполнение векторов
+    for (int i = 0; i < n1; i++)
+    {
+        a[i] = (double)rand() / RAND_MAX;
+        b[i] = (double)rand() / RAND_MAX;
+    }
+
+    double sc = scalmult(n, a, b);
+    double sc1;
+
+    MPI_Gather(&sc, n1, MPI_INT, &sc1, n1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        cout << "The Program is RUN on " << size << " CPU" << endl;
+        cout << "Result: " << sc1 << endl;
+    }
+
+    // Вызов функции из библиотеки, которая проводит проверку корректности реализации алгоритма и его ускорения
+    // submit(scalmult);
+
+    free_array(a, n);
+    free_array(b, n);
+    MPI_Finalize();
+    return 0;
+}

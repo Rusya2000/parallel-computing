@@ -1,0 +1,120 @@
+#include <iostream>
+#include <stdlib.h>
+#include <mpi.h>
+#include <algorithm>
+using namespace std;
+void prefixSum(int* arr, int n) {
+	int* prefix = new int[n];
+	prefix[0] = arr[0];
+	for (int j = 1; j < n; j++) {
+		prefix[j] = prefix[j - 1] + arr[j];
+	}
+	for (int k = 0; k < n; k++) {
+		arr[k] = prefix[k];
+	}
+}
+int Par_Partition(double* A, int x, int q, int r, int rank) {
+	
+	int i;
+	int n = r - q + 1;
+	if (n == 1) {
+		return q;
+	}
+	int k;
+	double* B = new double[n];
+	int* lt = new int[n];
+	int* gt = new int[n];
+	for (i = 0; i < n - 1; i++) {
+		B[i] = A[q + i];
+		if (B[i] < x) {
+			lt[i] = 1;
+		}
+		else {
+			lt[i] = 0;
+		}
+		if (B[i] > x) {
+			gt[i] = 1;
+		}
+		else {
+			gt[i] = 0;
+
+		}
+
+
+	}
+
+	prefixSum(lt, n);
+	prefixSum(gt, n);
+
+	k = q + lt[n - 1];
+	for (int i = 0; i < n - 1; i++) {
+		if (B[i] < x) {
+			A[q + lt[i] - 1] = B[i];
+
+
+
+
+		}
+		else if (B[i] > x) {
+			A[k + gt[i]] = B[i];
+		}
+
+	}
+
+	return k;
+}
+
+
+void Par_Randomized_QuickSort(double* A, int q, int r, int rank) {
+	int n = r - q + 1;
+	double x;
+	int k;
+	if (n <= 30) {
+		sort(A, A + n);
+	}
+	else {
+		x = A[rand() % (r - q) + q];
+		k = Par_Partition(A, x, q, r, rank);
+		Par_Randomized_QuickSort(A, q, k - 1, rank);
+		Par_Randomized_QuickSort(A, k + 1, r, rank);
+
+	}
+
+
+
+
+}
+
+int main(int argc, char* argv[])
+{
+	int i, rank, size;
+
+	MPI_Init(&argc, &argv);
+	MPI_Status s;
+
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	double* A = new double[20];
+	int N = 20 / size;
+	//if (rank == 1) {
+	for (int i = 0; i < 20; i++) {
+		A[i] = rand() % 20;
+	
+		cout <<"Before "<< rank<< " " << A[i] << endl;
+	}
+	
+
+
+	Par_Randomized_QuickSort(A, rank * N, rank * N + N, rank);
+
+		for (int i = rank * N; i < rank * N + N; i++) {
+			cout << "After " << " " << rank << " " << A[i] << endl;
+		}
+
+
+	MPI_Finalize();
+
+
+	return 0;
+}

@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\rustem\Desktop\пар_прог\Exercise1_MPI\main.cpp(50,9): warning C4244: инициализация: преобразование "__int64" в "int", возможна потеря данных
+C:\Users\rustem\Desktop\пар_прог\Exercise1_MPI\main.cpp(76,16): warning C4244: аргумент: преобразование "__int64" в "int", возможна потеря данных
+C:\Users\rustem\Desktop\пар_прог\Exercise1_MPI\main.cpp(77,16): warning C4244: аргумент: преобразование "__int64" в "int", возможна потеря данных
+LINK : fatal error LNK1104: не удается открыть файл "DLL_Example1.lib"

@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\User\Desktop\Exercise1_MPI\main.cpp(50,9): warning C4244: инициализация: преобразование "__int64" в "int", возможна потеря данных
+C:\Users\User\Desktop\Exercise1_MPI\main.cpp(79,16): warning C4244: аргумент: преобразование "__int64" в "int", возможна потеря данных
+C:\Users\User\Desktop\Exercise1_MPI\main.cpp(80,16): warning C4244: аргумент: преобразование "__int64" в "int", возможна потеря данных
+  Exercise1_MPI.vcxproj -> C:\Users\User\Desktop\Exercise1_MPI\Debug\Exercise1_MPI.exe
